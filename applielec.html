@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Élec Calc — P/U/I • Chute • Section • DJ</title>
+  <style>
+    :root{ --b:#ddd; --bg:#0b0b0c; --card:#141416; --txt:#f2f2f2; --mut:#b8b8b8; }
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:14px; background:var(--bg); color:var(--txt); max-width:680px}
+    h1{font-size:18px;margin:0 0 10px}
+    .tabs{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 12px}
+    .tab{padding:10px 12px; border:1px solid #2a2a2e; background:#101012; color:var(--txt); border-radius:12px; cursor:pointer}
+    .tab.active{border-color:#6a6a6f; background:#18181c}
+    .card{border:1px solid #222227; border-radius:16px; padding:12px; margin:10px 0; background:var(--card)}
+    label{display:block;font-size:12px;color:var(--mut); margin:10px 0 6px}
+    input,select{width:100%; padding:10px; border:1px solid #2b2b31; border-radius:12px; background:#0f0f12; color:var(--txt); font-size:16px}
+    input::placeholder{color:#666}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+    .btnrow{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+    button{padding:10px 12px; border:1px solid #2b2b31; background:#101014; color:var(--txt); border-radius:12px; cursor:pointer; font-size:14px}
+    button.primary{border-color:#6a6a6f; background:#18181c}
+    .out{margin-top:10px; font-size:16px; font-weight:700}
+    .small{font-size:12px;color:var(--mut); line-height:1.35; margin-top:8px}
+    .pill{display:inline-block; padding:3px 8px; border:1px solid #2b2b31; border-radius:999px; font-size:12px; color:var(--mut)}
+    .warn{color:#ffd27a}
+    .hide{display:none}
+    .divider{height:1px; background:#222227; margin:10px 0}
+  </style>
+</head>
+<body>
+  <h1>Élec Calc (mono + tri) — P/U/I • chute • section • disjoncteur</h1>
+
+  <div class="tabs">
+    <button class="tab active" data-pane="pane1">P / U / I</button>
+    <button class="tab" data-pane="pane2">Chute de tension</button>
+    <button class="tab" data-pane="pane3">Section mini</button>
+    <button class="tab" data-pane="pane4">Disjoncteur</button>
+  </div>
+
+  <!-- P/U/I -->
+  <div id="pane1" class="pane">
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Réseau</label>
+          <select id="net1">
+            <option value="mono">Monophasé</option>
+            <option value="tri">Triphasé</option>
+            <option value="dc">DC / résistif (P=U×I)</option>
+          </select>
+          <div class="btnrow">
+            <button type="button" class="primary" data-set-u="230" data-target="u1">230 V</button>
+            <button type="button" data-set-u="400" data-target="u1">400 V</button>
+          </div>
+        </div>
+        <div>
+          <label>Tension U (V)</label>
+          <input id="u1" type="number" inputmode="decimal" placeholder="ex: 230" value="230">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>cosφ</label>
+          <input id="cos1" type="number" inputmode="decimal" step="0.01" min="0" max="1" value="1">
+          <div class="btnrow">
+            <button type="button" class="primary" data-set-cos="1">1.00</button>
+            <button type="button" data-set-cos="0.9">0.90</button>
+            <button type="button" data-set-cos="0.8">0.80</button>
+          </div>
+        </div>
+        <div>
+          <label>Mode calcul</label>
+          <select id="mode1">
+            <option value="I_FROM_P">Calculer I depuis P</option>
+            <option value="P_FROM_I">Calculer P depuis I</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Puissance P</label>
+          <input id="p1" type="number" inputmode="decimal" placeholder="ex: 3000">
+          <div class="small">Astuce : mettez en W (ou en kW via le bouton).</div>
+          <div class="btnrow">
+            <button type="button" data-unit="kw_to_w" data-src="p1">kW → W</button>
+            <button type="button" data-unit="w_to_kw" data-src="p1">W → kW</button>
+          </div>
+        </div>
+        <div>
+          <label>Courant I (A)</label>
+          <input id="i1" type="number" inputmode="decimal" placeholder="ex: 16">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="out" id="out1">—</div>
+      <div class="small">
+        Formules :
+        <span class="pill">Mono : P = U×I×cosφ</span>
+        <span class="pill">Tri : P = √3×U×I×cosφ</span>
+        <span class="pill">S (kVA) = P / cosφ</span>
+      </div>
+
+      <div class="divider"></div>
+      <div class="out" id="out1b">—</div>
+      <div class="small">Affiche aussi kVA (S) et kVAr (Q) à titre pratique.</div>
+    </div>
+  </div>
+
+  <!-- Chute de tension -->
+  <div id="pane2" class="pane hide">
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Réseau</label>
+          <select id="net2">
+            <option value="mono">Monophasé</option>
+            <option value="tri">Triphasé</option>
+          </select>
+          <div class="btnrow">
+            <button type="button" class="primary" data-set-u="230" data-target="u2">230 V</button>
+            <button type="button" data-set-u="400" data-target="u2">400 V</button>
+          </div>
+        </div>
+        <div>
+          <label>Tension U (V)</label>
+          <input id="u2" type="number" inputmode="decimal" value="230">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Longueur L (m)</label>
+          <input id="l2" type="number" inputmode="decimal" placeholder="aller (m)" value="20">
+          <div class="small">Mono : on considère aller-retour automatiquement. Tri : longueur aller.</div>
+        </div>
+        <div>
+          <label>Courant I (A)</label>
+          <input id="i2" type="number" inputmode="decimal" placeholder="ex: 16" value="16">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Section S (mm²)</label>
+          <select id="s2">
+            <option>1.5</option><option>2.5</option><option>4</option><option>6</option>
+            <option selected>10</option><option>16</option><option>25</option><option>35</option>
+            <option>50</option><option>70</option><option>95</option><option>120</option>
+            <option>150</option><option>185</option><option>240</option>
+          </select>
+        </div>
+        <div>
+          <label>Conducteur</label>
+          <select id="mat2">
+            <option value="cu" selected>Cuivre</option>
+            <option value="al">Aluminium</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>cosφ</label>
+          <input id="cos2" type="number" inputmode="decimal" step="0.01" min="0" max="1" value="1">
+          <div class="btnrow">
+            <button type="button" class="primary" data-set-cos2="1">1.00</button>
+            <button type="button" data-set-cos2="0.9">0.90</button>
+            <button type="button" data-set-cos2="0.8">0.80</button>
+          </div>
+        </div>
+        <div>
+          <label>Type câble (pour X approx.)</label>
+          <select id="xtype2">
+            <option value="multi" selected>Multiconducteur / U1000R2V (X ≈ 0,08 Ω/km)</option>
+            <option value="single">Unipolaire en chemin de câble (X ≈ 0,10 Ω/km)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="out" id="out2">—</div>
+      <div class="small warn">
+        Chute de tension = estimation pratique (R + X). Pour validation normative/chantier : vérifier méthode et conditions de pose.
+      </div>
+    </div>
+  </div>
+
+  <!-- Section mini -->
+  <div id="pane3" class="pane hide">
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Réseau</label>
+          <select id="net3">
+            <option value="mono">Monophasé</option>
+            <option value="tri">Triphasé</option>
+          </select>
+          <div class="btnrow">
+            <button type="button" class="primary" data-set-u="230" data-target="u3">230 V</button>
+            <button type="button" data-set-u="400" data-target="u3">400 V</button>
+          </div>
+        </div>
+        <div>
+          <label>Tension U (V)</label>
+          <input id="u3" type="number" inputmode="decimal" value="230">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Longueur L (m)</label>
+          <input id="l3" type="number" inputmode="decimal" value="20">
+        </div>
+        <div>
+          <label>Courant I (A)</label>
+          <input id="i3" type="number" inputmode="decimal" value="16">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Conducteur</label>
+          <select id="mat3">
+            <option value="cu" selected>Cuivre</option>
+            <option value="al">Aluminium</option>
+          </select>
+        </div>
+        <div>
+          <label>Chute max (%)</label>
+          <input id="maxdrop3" type="number" inputmode="decimal" step="0.1" value="3">
+          <div class="small">Exemples : 3% / 5% selon usage. À vous de régler.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>cosφ</label>
+          <input id="cos3" type="number" inputmode="decimal" step="0.01" min="0" max="1" value="1">
+          <div class="btnrow">
+            <button type="button" class="primary" data-set-cos3="1">1.00</button>
+            <button type="button" data-set-cos3="0.9">0.90</button>
+            <button type="button" data-set-cos3="0.8">0.80</button>
+          </div>
+        </div>
+        <div>
+          <label>Type câble (pour X approx.)</label>
+          <select id="xtype3">
+            <option value="multi" selected>Multiconducteur (X ≈ 0,08 Ω/km)</option>
+            <option value="single">Unipolaire (X ≈ 0,10 Ω/km)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="out" id="out3">—</div>
+      <div class="small warn">
+        Cette “section mini” est basée sur la chute de tension uniquement. Il faut aussi vérifier l’intensité admissible selon pose, regroupement, température, etc.
+      </div>
+    </div>
+  </div>
+
+  <!-- Disjoncteur -->
+  <div id="pane4" class="pane hide">
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Courant calculé I (A)</label>
+          <input id="i4" type="number" inputmode="decimal" placeholder="ex: 16">
+        </div>
+        <div>
+          <label>Marge (×)</label>
+          <select id="m4">
+            <option value="1.0">1.00 (sans marge)</option>
+            <option value="1.1">1.10</option>
+            <option value="1.25" selected>1.25 (pratique)</option>
+            <option value="1.4">1.40 (charges/pointes)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Série calibres</label>
+          <select id="serie4">
+            <option value="std" selected>Standard (2,4,6,10,13,16,20,25,32,40,50,63,80,100,125)</option>
+            <option value="res">Résidentiel (2,10,16,20,25,32,40,63)</option>
+          </select>
+        </div>
+        <div>
+          <label>Résultat</label>
+          <div class="out" id="out4">—</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="small">
+        <span class="pill">Rappel</span>
+        Le calibre dépend aussi de la courbe (B/C/D), des pointes (moteurs), du câble, de la sélectivité.
+        Ici c’est une reco “gain de temps”, pas un verdict.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Helpers ----------
+    const SECTIONS = [1.5,2.5,4,6,10,16,25,35,50,70,95,120,150,185,240];
+    const DJ_STD = [2,4,6,10,13,16,20,25,32,40,50,63,80,100,125];
+    const DJ_RES = [2,10,16,20,25,32,40,63];
+
+    function $(id){ return document.getElementById(id); }
+    function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
+    function fmt(n, digits=2){
+      if (!Number.isFinite(n)) return "—";
+      return n.toLocaleString('fr-FR', {maximumFractionDigits: digits});
+    }
+    function pickNextStandard(value, arr){
+      for (const a of arr) if (a >= value) return a;
+      return arr[arr.length-1];
+    }
+
+    // Resistivity in Ω·mm²/m at ~20°C (practical)
+    const RHO = { cu: 0.0175, al: 0.0282 };
+
+    // Reactance approx in Ω/km (practical typical)
+    function X_ohm_per_m(xtype){
+      const ohmPerKm = (xtype === "single") ? 0.10 : 0.08;
+      return ohmPerKm / 1000;
+    }
+
+    // Voltage drop (R+X) practical:
+    // Mono: ΔU = 2*L*I*(Rcos + Xsin)
+    // Tri:  ΔU = √3*L*I*(Rcos + Xsin)
+    // where R = ρ/S (Ω/m), X = X_ohm_per_m
+    function dropVolts({net,U,L,I,S,mat,cos,xtype}){
+      const rho = RHO[mat] ?? RHO.cu;
+      const R = rho / S; // Ω/m
+      const X = X_ohm_per_m(xtype); // Ω/m
+      const c = clamp(cos, 0, 1);
+      const sin = Math.sqrt(Math.max(0, 1 - c*c));
+      const term = (R*c + X*sin);
+
+      if (net === "mono") return 2 * L * I * term;
+      // tri
+      return Math.sqrt(3) * L * I * term;
+    }
+
+    // ---------- Tabs ----------
+    document.querySelectorAll(".tab").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        const paneId = btn.dataset.pane;
+        document.querySelectorAll(".pane").forEach(p=>p.classList.add("hide"));
+        $(paneId).classList.remove("hide");
+      });
+    });
+
+    // Quick buttons U
+    document.querySelectorAll("button[data-set-u]").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        const v = Number(b.dataset.setU);
+        const t = $(b.dataset.target);
+        t.value = String(v);
+        computeAll();
+      });
+    });
+
+    // Unit conversion on P
+    document.querySelectorAll("button[data-unit]").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        const src = $(b.dataset.src);
+        const val = Number(src.value);
+        if (!Number.isFinite(val)) return;
+        if (b.dataset.unit === "kw_to_w") src.value = String(val * 1000);
+        if (b.dataset.unit === "w_to_kw") src.value = String((val / 1000).toFixed(3));
+        computeAll();
+      });
+    });
+
+    // cos quick
+    document.querySelectorAll("button[data-set-cos]").forEach(b=>{
+      b.addEventListener("click", ()=>{ $("cos1").value = b.dataset.setCos; computeAll(); });
+    });
+    document.querySelectorAll("button[data-set-cos2]").forEach(b=>{
+      b.addEventListener("click", ()=>{ $("cos2").value = b.dataset.setCos2; computeAll(); });
+    });
+    document.querySelectorAll("button[data-set-cos3]").forEach(b=>{
+      b.addEventListener("click", ()=>{ $("cos3").value = b.dataset.setCos3; computeAll(); });
+    });
+
+    // ---------- Pane 1: P/U/I ----------
+    function factorForNet(net, cos){
+      const c = clamp(cos, 0, 1);
+      if (net === "dc") return 1;
+      if (net === "mono") return c;
+      if (net === "tri") return Math.sqrt(3) * c;
+      return 1;
+    }
+
+    function computePUI(){
+      const net = $("net1").value;
+      const U = Number($("u1").value);
+      const cos = Number($("cos1").value || 1);
+      const mode = $("mode1").value;
+
+      const F = factorForNet(net, cos);
+      const c = clamp(cos, 0, 1);
+
+      let text = "—";
+      let text2 = "—";
+
+      if (mode === "I_FROM_P"){
+        const P = Number($("p1").value);
+        if (Number.isFinite(P) && Number.isFinite(U) && U>0 && F>0){
+          const I = P / (U * F);
+          text = `I = ${fmt(I, 2)} A  (P=${fmt(P,0)} W, U=${fmt(U,0)} V, cosφ=${fmt(c,2)})`;
+
+          // Apparent power (kVA) and reactive (kVAr)
+          const S = (c > 0) ? (P / c) : NaN;
+          const Q = Number.isFinite(S) ? Math.sqrt(Math.max(0, S*S - P*P)) : NaN;
+          text2 = `S = ${fmt(S/1000, 2)} kVA   •   Q = ${fmt(Q/1000, 2)} kVAr`;
+        }
+      } else {
+        const I = Number($("i1").value);
+        if (Number.isFinite(I) && Number.isFinite(U) && U>0 && F>0){
+          const P = U * I * F;
+          text = `P = ${fmt(P, 0)} W  (I=${fmt(I,2)} A, U=${fmt(U,0)} V, cosφ=${fmt(c,2)})`;
+
+          const S = (c > 0) ? (P / c) : NaN;
+          const Q = Number.isFinite(S) ? Math.sqrt(Math.max(0, S*S - P*P)) : NaN;
+          text2 = `S = ${fmt(S/1000, 2)} kVA   •   Q = ${fmt(Q/1000, 2)} kVAr`;
+        }
+      }
+
+      $("out1").textContent = text;
+      $("out1b").textContent = text2;
+    }
+
+    // ---------- Pane 2: Drop ----------
+    function computeDrop(){
+      const net = $("net2").value;
+      const U = Number($("u2").value);
+      const L = Number($("l2").value);
+      const I = Number($("i2").value);
+      const S = Number($("s2").value);
+      const mat = $("mat2").value;
+      const cos = Number($("cos2").value || 1);
+      const xtype = $("xtype2").value;
+
+      if (![U,L,I,S].every(Number.isFinite) || U<=0 || L<=0 || I<0 || S<=0){
+        $("out2").textContent = "—";
+        return;
+      }
+
+      const dU = dropVolts({net,U,L,I,S,mat,cos,xtype});
+      const pct = (dU / U) * 100;
+      $("out2").textContent =
+        `ΔU ≈ ${fmt(dU, 2)} V  •  ${fmt(pct, 2)} %   (L=${fmt(L,0)} m, I=${fmt(I,2)} A, S=${fmt(S,1)} mm², ${mat.toUpperCase()})`;
+    }
+
+    // ---------- Pane 3: Section from max drop ----------
+    function computeSectionMin(){
+      const net = $("net3").value;
+      const U = Number($("u3").value);
+      const L = Number($("l3").value);
+      const I = Number($("i3").value);
+      const mat = $("mat3").value;
+      const maxPct = Number($("maxdrop3").value);
+      const cos = Number($("cos3").value || 1);
+      const xtype = $("xtype3").value;
+
+      if (![U,L,I,maxPct].every(Number.isFinite) || U<=0 || L<=0 || I<0 || maxPct<=0){
+        $("out3").textContent = "—";
+        return;
+      }
+
+      const maxV = U * (maxPct/100);
+      let chosen = null, chosenDrop = null, chosenPct = null;
+
+      for (const S of SECTIONS){
+        const dU = dropVolts({net,U,L,I,S,mat,cos,xtype});
+        if (dU <= maxV){
+          chosen = S;
+          chosenDrop = dU;
+          chosenPct = (dU/U)*100;
+          break;
+        }
+      }
+
+      if (!chosen){
+        $("out3").textContent = `Même 240 mm² dépasse ${fmt(maxPct,1)}% (chute). Réduire L / I / augmenter U / accepter +%`;
+        return;
+      }
+
+      $("out3").textContent =
+        `Section mini (chute) ≈ ${fmt(chosen,1)} mm²  •  ΔU ≈ ${fmt(chosenDrop,2)} V (${fmt(chosenPct,2)}%)`;
+    }
+
+    // ---------- Pane 4: Breaker ----------
+    function computeDJ(){
+      const I = Number($("i4").value);
+      const m = Number($("m4").value);
+      const serie = $("serie4").value;
+      const arr = (serie === "res") ? DJ_RES : DJ_STD;
+
+      if (!Number.isFinite(I) || I<=0 || !Number.isFinite(m) || m<=0){
+        $("out4").textContent = "—";
+        return;
+      }
+
+      const target = I * m;
+      const dj = pickNextStandard(target, arr);
+      $("out4").textContent = `${dj} A (cible ≈ ${fmt(target,2)} A)`;
+    }
+
+    function computeAll(){
+      computePUI();
+      computeDrop();
+      computeSectionMin();
+      computeDJ();
+    }
+
+    // Inputs listeners
+    ["net1","u1","cos1","mode1","p1","i1",
+     "net2","u2","l2","i2","s2","mat2","cos2","xtype2",
+     "net3","u3","l3","i3","mat3","maxdrop3","cos3","xtype3",
+     "i4","m4","serie4"
+    ].forEach(id=>{
+      const el = $(id);
+      if (el) el.addEventListener("input", computeAll);
+      if (el) el.addEventListener("change", computeAll);
+    });
+
+    // Default tweaks: if tri on pane2/3 and U=230 -> suggest 400
+    $("net2").addEventListener("change", ()=>{ if ($("net2").value==="tri" && Number($("u2").value)===230) $("u2").value="400"; computeAll(); });
+    $("net3").addEventListener("change", ()=>{ if ($("net3").value==="tri" && Number($("u3").value)===230) $("u3").value="400"; computeAll(); });
+
+    computeAll();
+  </script>
+</body>
+</html>
